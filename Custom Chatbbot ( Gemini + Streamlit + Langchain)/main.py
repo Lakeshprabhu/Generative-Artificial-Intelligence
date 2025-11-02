@@ -11,7 +11,6 @@ load_dotenv()
 
 key = os.getenv("GEMINI")
 
-embeddings = GoogleGenerativeAIEmbeddings(google_api_key=key  )
 st.header("My first Chatbot")
 
 st.subheader("This is the content")
@@ -34,10 +33,17 @@ if file is not None:
     )
 
     abc = text_splitter.split_text(text)
-    st.write(abc)
+    embeddings =  GoogleGenerativeAIEmbeddings(google_api_key=key)
 
 
-vector_store = FAISS.from_texts(abc,embeddings)
+
+
+    vector_store = FAISS.from_texts(abc,embeddings)
+
+    user_question = st.text_input("Type your question here")
+
+    if user_question:
+        vector_store.similarity_search(user_question)
 
 
 

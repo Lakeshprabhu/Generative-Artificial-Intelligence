@@ -1,15 +1,20 @@
 import streamlit as st
 from PyPDF2 import PdfReader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_community.vectorstores import FAISS
+from langchain_community.chat_models import ChatOpenAI
+from langchain_openai import OpenAIEmbeddings
+from langchain.chains.combine_documents import create_stuff_documents_chain
 
+from langchain.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
 import os
 
 load_dotenv()
 
-key = os.getenv("GEMINI")
+os.environ["OPENAI_API_KEY"] = os.getenv("CHAT")
+
+key = os.getenv("CHAT")
 
 st.header("My first Chatbot")
 
@@ -33,8 +38,7 @@ if file is not None:
     )
 
     abc = text_splitter.split_text(text)
-    embeddings =  GoogleGenerativeAIEmbeddings(google_api_key=key)
-
+    embeddings = OpenAIEmbeddings(openai_api_key =key ,  model="text-embedding-3-small")
 
 
 
@@ -43,8 +47,19 @@ if file is not None:
     user_question = st.text_input("Type your question here")
 
     if user_question:
-        vector_store.similarity_search(user_question)
+        match = vector_store.similarity_search(user_question)
 
+
+        llm =ChatOpenAI( temperature=0.2)
+        prompt = ChatPromptTemplate.from_template(
+            "Use the following context to answer the question.\n\n{context}\n\nQuestion: {input}"
+        )
+        chain = create_stuff_documents_chain(llm,prompt = prompt)
+        response = chain.invoke({
+            "context": match,  # this must be a list of Documents
+            "input": user_question  # this is your actual question text
+        })
+        st.write(response)
 
 
 
